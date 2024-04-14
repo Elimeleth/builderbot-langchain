@@ -12,3 +12,4 @@ data/
 *.qr.png
 *embedding
 *app.*
+*.tgz

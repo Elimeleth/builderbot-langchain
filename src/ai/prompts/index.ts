@@ -15,7 +15,7 @@ export const PROMT = ChatPromptTemplate.fromMessages([
 ]);
 
 
-const SYSTEM_RAG = `Your task is to answer the users question based on the provided context.
+export const SYSTEM_RAG = `Your task is to answer the users question based on the provided context.
 only answer the question if you can and only describe the product if you can DON'T sell the product and dont sugests the price's product.
 
 Use the following pieces of retrieved context to answer the question.

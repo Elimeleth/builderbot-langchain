@@ -80,6 +80,10 @@ class createAIFlow {
             || z.object({ answer: z.string().describe('Answer as best possible') })
         }
 
+        if (opts?.answerSchema) {
+            this.schema = opts?.answerSchema
+        }
+
         if (!this.contextual) {
             this.contextual = new ContextualCompression(this.store)
         }
