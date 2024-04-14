@@ -1,0 +1,48 @@
+{
+	"name": "@elimeleth/builderbot-langchain",
+	"version": "1.0.0-alpha.0",
+	"description": "Interface para crear chatbot con Builderbot & LangChain",
+	"main": "dist/index.cjs",
+	"types": "dist/index.d.ts",
+	"type": "module",
+	"keywords": ["chatbot", "builderbot", "langchain", "whatsapp", "telegram"],
+	"author": "Elimeleth Capuano <elimeleth.contacto@gmail.com>",
+	"scripts": {
+		"test": "jest",
+		"build": "rimraf dist && npx rollup --config",
+		"dev": "tsm src/index.ts",
+		"start": "pnpm run build && node dist/index.cjs",
+		"local:build": "pnpm run build && npm pack"
+	},
+	"dependencies": {
+		"@builderbot-plugins/fast-embedding": "1.0.0-alpha.0",
+		"@builderbot-plugins/telegram": "2.0.11-alpha.0",
+		"@builderbot/bot": "1.1.0",
+		"@builderbot/provider-meta": "^1.1.0",
+		"@langchain/community": "^0.0.47",
+		"@langchain/core": "^0.1.57",
+		"@langchain/google-genai": "^0.0.11",
+		"@langchain/openai": "^0.0.28",
+		"@oramacloud/client": "^1.0.14",
+		"axios": "^1.6.8",
+		"d3-dsv": "2",
+		"dotenv": "^16.4.5",
+		"hnswlib-node": "^3.0.0",
+		"langchain": "^0.1.33",
+		"pdf-parse": "^1.1.1",
+		"tslib": "^2.6.2",
+		"zod": "^3.22.4"
+	},
+	"devDependencies": {
+		"@jest/globals": "29.7.0",
+		"@rollup/plugin-commonjs": "25.0.7",
+		"@rollup/plugin-node-resolve": "15.2.3",
+		"@types/node": "^20.12.5",
+		"@typescript-eslint/eslint-plugin": "^6.21.0",
+		"@typescript-eslint/parser": "^6.21.0",
+		"rimraf": "5.0.5",
+		"rollup-plugin-typescript2": "0.36.0",
+		"tsm": "^2.3.0",
+		"typescript": "^5.4.4"
+	}
+}
