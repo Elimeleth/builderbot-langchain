@@ -5,7 +5,13 @@
 	"main": "dist/index.cjs",
 	"types": "dist/index.d.ts",
 	"type": "module",
-	"keywords": ["chatbot", "builderbot", "langchain", "whatsapp", "telegram"],
+	"keywords": [
+		"chatbot",
+		"builderbot",
+		"langchain",
+		"whatsapp",
+		"telegram"
+	],
 	"author": "Elimeleth Capuano <elimeleth.contacto@gmail.com>",
 	"scripts": {
 		"test": "jest",
@@ -16,9 +22,7 @@
 	},
 	"dependencies": {
 		"@builderbot-plugins/fast-embedding": "1.0.0-alpha.0",
-		"@builderbot-plugins/telegram": "2.0.11-alpha.0",
 		"@builderbot/bot": "1.1.0",
-		"@builderbot/provider-meta": "^1.1.0",
 		"@langchain/community": "^0.0.47",
 		"@langchain/core": "^0.1.57",
 		"@langchain/google-genai": "^0.0.11",
@@ -35,6 +39,7 @@
 	},
 	"devDependencies": {
 		"@jest/globals": "29.7.0",
+		"@builderbot-plugins/telegram": "2.0.11-alpha.0",
 		"@rollup/plugin-commonjs": "25.0.7",
 		"@rollup/plugin-node-resolve": "15.2.3",
 		"@types/node": "^20.12.5",

@@ -19,9 +19,18 @@ import {
     ): Promise<Document[]> {
       const results = await this.searchFn(query);
       
-      return results.map((result) => new Document({ 
-        pageContent: Object.entries(result).map(([k, v]) => `${k}: ${v}`).join('\n'),
+      const data =  results.map((result) => new Document({ 
+        pageContent: Object.entries(result).map(([k, v]) => {
+          if (typeof v === 'object') {
+            return `${k}: ${JSON.stringify(v)}`
+          }else if (Array.isArray(v)) {
+            return `${k}: ${v.join(', ')}`
+          }
+          return `${k}: ${v}`
+        }).join('\n'),
         metadata: result
     }))
+
+    return data
     }
   }

@@ -30,8 +30,8 @@ export default class ContextualCompression {
     private get embeddingFilter() {
         return new EmbeddingsFilter({
             embeddings: this?.embeddings?.model || new FastEmbedding('AllMiniLML6V2'),
-            similarityThreshold: this?.embeddings?.similarityThreshold || 0.77,
-            k: this?.embeddings?.k || 5
+            similarityThreshold: this?.embeddings?.similarityThreshold || 0.5,
+            k: this?.embeddings?.k || 10
         });
     }
 

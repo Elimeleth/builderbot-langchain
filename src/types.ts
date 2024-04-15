@@ -55,3 +55,57 @@ export type RunnableConf = {
     prompt?: string,
     answerSchema: ZodType<any, ZodTypeDef, any>,
 }
+
+export interface Product {
+    id: string
+    handle: string
+    availableForSale: boolean
+    title: string
+    description: string
+    descriptionHtml: string
+    options: Option[]
+    priceRange: PriceRange
+    featuredImage: FeaturedImage
+    tags: string[]
+    images: Image[]
+    variants: Variant[]
+  }
+  
+  export interface Option {
+    id: string
+    name: string
+    values: string[]
+  }
+  
+  export interface PriceRange {
+    min: number
+    max: number
+  }
+  
+  export interface FeaturedImage {
+    url: string
+  }
+  
+  export interface Image {
+    url: string
+    altText: string
+  }
+  
+  export interface Variant {
+    id: string
+    title: string
+    availableForSale: boolean
+    selectedOptions: SelectedOption[]
+    price: Price[]
+  }
+  
+  export interface SelectedOption {
+    name: string
+    value: string
+  }
+  
+  export interface Price {
+    amount: string
+    currencyCode: string
+  }
+  
