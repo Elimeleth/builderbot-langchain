@@ -1,8 +1,9 @@
 import { EVENTS } from "@builderbot/bot"
 import { TFlow } from "@builderbot/bot/dist/types"
 import { Embeddings } from "@langchain/core/embeddings"
-import { BaseRetrieverInput } from "@langchain/core/retrievers"
-import { VectorStore, VectorStoreRetriever } from "@langchain/core/vectorstores"
+import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers"
+import { VectorStore } from "@langchain/core/vectorstores"
+import { AxiosRequestConfig } from "axios"
 import { ZodType, ZodTypeDef } from "zod"
 
 export type Eventskrd = keyof typeof EVENTS
@@ -12,6 +13,8 @@ export type Callbacks = {
     afterEnd?: <P, B>(flow: TFlow<P,B>) => TFlow<P,B>,
     onFailure?: (error: Error) => void
 }
+
+export type AiModel = { modelName: ModelName, args?: ModelArgs }
 
 export type ModelArgs = {
     modelName: string,
@@ -23,10 +26,13 @@ export type ModelArgs = {
 }
 
 export type Store = {
-    urlOrPath?: string,
-    schema?: string[],
-    store?: VectorStore|unknown,
-    embbedgins?: Embeddings
+  conf: {
+    urlOrPath: string,
+    schema: string[],
+    store?: VectorStore,
+    embbedgins?: Embeddings,
+    httpConf?: AxiosRequestConfig,
+}
 }
 
 export type Retriever = {
@@ -54,6 +60,11 @@ export type ContextOpts = {
 export type RunnableConf = {
     prompt?: string,
     answerSchema: ZodType<any, ZodTypeDef, any>,
+    contextual?: {
+      contextOpts?: { k: number, similarityThreshold: number, embeddings?: Embeddings },
+      retriever: BaseRetriever
+    },
+    aiModel?: AiModel
 }
 
 export interface Product {

@@ -14,22 +14,34 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 
 import { FastEmbedding } from "@builderbot-plugins/fast-embedding"
 import { Embeddings } from "@langchain/core/embeddings";
+import { AxiosRequestConfig } from "axios";
 
 export default class StoreRetriever extends BaseRetriever {
     lc_namespace = ["langchain", "retrievers"];
+    urlOrPath: string
+    schema: string[]
+    store?: any
+    embbedgins?: Embeddings
+    httpConf?: AxiosRequestConfig
     constructor(
-        private urlOrPath: string,
-        private schema: string[],
-        private store?: any,
-        private embbedgins?: Embeddings,
+        private conf: {
+            urlOrPath: string,
+            schema: string[],
+            store?: any,
+            embbedgins?: Embeddings,
+            httpConf?: AxiosRequestConfig,
+        },
         fields?: BaseRetrieverInput
         ) {
             super(fields)
             this.ingest().then(() => console.log('Ingested')).catch(err => {
                 throw err
             })
-
-
+            this.urlOrPath = this.conf?.urlOrPath
+            this.schema = this.conf?.schema
+            this.store = this.conf?.store
+            this.embbedgins = this.conf?.embbedgins
+            this.httpConf = this.conf?.httpConf
         }
 
     private async ingest() {
@@ -48,7 +60,7 @@ export default class StoreRetriever extends BaseRetriever {
             if (!this.schema) {
                 throw new Error('You must set the schema array first')
             }
-            const data = await httpRequest(this.urlOrPath, {})
+            const data = await httpRequest(this.urlOrPath, this?.httpConf || { headers: { 'Content-Type': 'application/json' } })
 
             if (!Array.isArray(data) || !data.length) {
                 throw new Error('The data must be an array with at least one element')

@@ -1,13 +1,13 @@
-import { ModelArgs, ModelName } from "../types";
+import { AiModel } from "../types";
 import { FactoryModel } from "../ai";
-import { ZodSchema, ZodType, ZodTypeDef } from "zod";
+import { ZodType, ZodTypeDef } from "zod";
 import {  BotContext, BotMethods, CallbackFunction } from "@builderbot/bot/dist/types";
 import { schemasFn } from "../ai/functions";
 import z from "zod"
 
 export default class StructLayer<T> {
     model: FactoryModel
-    constructor(private schema: ZodType<T, ZodTypeDef, T>, private aiModel?: { modelName: ModelName, args?: ModelArgs }) {
+    constructor(private schema: ZodType<T, ZodTypeDef, T>, private aiModel?: AiModel) {
         this.schema = this.schema 
 
         this.model = new FactoryModel(aiModel)

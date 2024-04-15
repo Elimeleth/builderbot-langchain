@@ -1,5 +1,5 @@
 import { EVENTS, addKeyword } from "@builderbot/bot";
-import { Callbacks, Retriever, ModelArgs, ModelName, Store, RunnableConf } from "./types";
+import { Callbacks, Retriever, ModelArgs, ModelName, Store, RunnableConf, AiModel } from "./types";
 import { FactoryModel, Memory, Runnable } from "./ai";
 import { ZodSchema, ZodType, ZodTypeDef } from "zod";
 import { TFlow, BotContext, BotMethods } from "@builderbot/bot/dist/types";
@@ -16,8 +16,6 @@ import z from "zod"
 class createAIFlow {
     private static kwrd: TFlow<any, any> = addKeyword(EVENTS.ACTION)
     private static schema: ZodSchema
-    private static model: FactoryModel = new FactoryModel()
-    private static contextual: ContextualCompression
     private static store: BaseRetriever
 
     static setKeyword = (ev: any) => {
@@ -25,38 +23,50 @@ class createAIFlow {
         return this
     }
 
-    static setAIModel = (ai?: { modelName: ModelName, args?: ModelArgs }) => {
-        this.model = new FactoryModel(ai)
-        return this
+    private static setAIModel = (ai?: { modelName: ModelName, args?: ModelArgs }) => {
+        return new FactoryModel(ai)
     }
 
-    static setZodSchema = <T>(schema: ZodType<T, ZodTypeDef, T>) => {
-        this.schema = schema
-        return this
+    private static setContextual (k: number, similarityThreshold: number, model?: Embeddings) {
+        if (!this.store) {
+            throw new Error('You must set the store first')
+        }
+        return new ContextualCompression(this.store, {
+            k, model, similarityThreshold
+        })
     }
 
-    static setStore = (store: Partial<Store & Retriever>) => {
-        if (!store?.urlOrPath && !store?.searchFn) {
+    static setStore = (args: Partial<Store & Retriever>) => {
+        if (!args?.conf?.urlOrPath && !args?.searchFn) {
             throw new Error('Either urlOrPath or searchFn must be provided')
         }
 
-        if (Object.keys(store).includes('urlOrPath')) {
-            this.store = new StoreRetriever(store.urlOrPath, store?.schema, store?.store, store?.embbedgins)
+        if (Object.keys(args.conf).includes('urlOrPath')) {
+            const store = args.conf
+            this.store = new StoreRetriever({
+                urlOrPath: store?.urlOrPath,
+                schema: store?.schema,
+                store: store?.store,
+                embbedgins: store?.embbedgins,
+                httpConf: store?.httpConf
+            })
         }else {
-            this.store = new CustomRetriever(store.searchFn, store?.fields)
+            this.store = new CustomRetriever(args.searchFn, args?.fields)
         }
         return this
     }
 
-    static setCatchLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, capture: boolean = false) => {
+    static setStructuredLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, opts?: { capture: boolean, aiModel?: AiModel }) => {
+        const { capture, aiModel } = opts
         this.kwrd = this.kwrd.addAction({ capture }, 
-            new StructLayer(schema).createCallback(cb))
+            new StructLayer(schema, aiModel).createCallback(cb))
         return this
     }
 
-    static setTransformLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, capture: boolean = false) => {
+    static setContextLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, opts?: { capture: boolean, aiModel?: AiModel }) => {
+        const { capture, aiModel } = opts
         this.kwrd = this.kwrd.addAction({ capture }, 
-            new TransformLayer(schema).createCallback(cb))
+            new TransformLayer(schema, aiModel).createCallback(cb))
         return this
     }
 
@@ -65,30 +75,12 @@ class createAIFlow {
         return this
     }
 
-    static setContextual (k: number, similarityThreshold: number, model?: Embeddings) {
-        if (!this.store) {
-            throw new Error('You must set the store first')
-        }
-        this.contextual = new ContextualCompression(this.store, {
-            k, model, similarityThreshold
-        })
-
-        return this
-    }
-
     static createRunnable = (opts?: RunnableConf, callbacks?: Callbacks) => {
-        if (!this.schema) {
-            this.schema = opts?.answerSchema 
-            || z.object({ answer: z.string().describe('Answer as best possible') })
-        }
+        let contextual = new ContextualCompression(opts?.contextual?.retriever || this.store, opts?.contextual?.contextOpts);
+        let model: FactoryModel = new FactoryModel(opts?.aiModel);
 
-        if (opts?.answerSchema) {
-            this.schema = opts?.answerSchema
-        }
-
-        if (!this.contextual) {
-            this.contextual = new ContextualCompression(this.store)
-        }
+        this.schema = opts?.answerSchema 
+            || this.schema || z.object({ answer: z.string().describe('Answer as best possible') })
 
         const format_instructions = new StructuredOutputParser(this.schema).getFormatInstructions()
 
@@ -100,10 +92,10 @@ class createAIFlow {
                     ctx.context = ctx.context.join(' ')
                 }
 
-                const context = await this.contextual.invoke(ctx?.context || ctx.body)
+                const context = await contextual.invoke(ctx?.context || ctx.body)
                 const mapContext = context.map(doc => doc.pageContent).join('\n')
                 
-                const answer = await new Runnable(this.model.model, opts?.prompt).retriever(
+                const answer = await new Runnable(model.model, opts?.prompt).retriever(
                     mapContext,
                     {
                         question: ctx.body,
