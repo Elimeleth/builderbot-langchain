@@ -49,12 +49,14 @@ class createAIFlow {
     }
 
     static setCatchLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, capture: boolean = false) => {
-        this.kwrd = this.kwrd.addAction({ capture }, StructLayer.create(schema, { modelName: 'openai' }, cb))
+        this.kwrd = this.kwrd.addAction({ capture }, 
+            new StructLayer(schema).createCallback(cb))
         return this
     }
 
     static setTransformLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, capture: boolean = false) => {
-        this.kwrd = this.kwrd.addAction({ capture }, TransformLayer.create(schema, { modelName: 'openai' }, cb))
+        this.kwrd = this.kwrd.addAction({ capture }, 
+            new TransformLayer(schema).createCallback(cb))
         return this
     }
 
@@ -92,9 +94,15 @@ class createAIFlow {
 
         this.kwrd = this.kwrd.addAction(async (ctx, { state }) => {
             try {
+                if (ctx?.context && typeof ctx.context === 'object') {
+                    ctx.context = Object.values(ctx.context).join(' ')
+                }else if (Array.isArray(ctx.context)) {
+                    ctx.context = ctx.context.join(' ')
+                }
+
                 const context = await this.contextual.invoke(ctx?.context || ctx.body)
                 const mapContext = context.map(doc => doc.pageContent).join('\n')
-                console.log({ mapContext })
+                
                 const answer = await new Runnable(this.model.model, opts?.prompt).retriever(
                     mapContext,
                     {

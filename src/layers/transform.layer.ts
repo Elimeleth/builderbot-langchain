@@ -1,17 +1,24 @@
 import { ModelArgs, ModelName } from "../types";
 import { FactoryModel } from "../ai";
 import { ZodSchema, ZodType, ZodTypeDef } from "zod";
-import {  BotContext, BotMethods } from "@builderbot/bot/dist/types";
+import {  BotContext, BotMethods, CallbackFunction } from "@builderbot/bot/dist/types";
 import { schemasFn } from "../ai/functions";
 import z from "zod"
 
-export default class TransformLayer {
+export default class TransformLayer<T> {
+    model: FactoryModel
+    constructor(private schema: ZodType<T, ZodTypeDef, T>, private aiModel?: { modelName: ModelName, args?: ModelArgs }) {
+        this.schema = this.schema 
 
-    static create = <T>(schema: ZodType<T, ZodTypeDef, T>, model: { modelName: ModelName, args?: ModelArgs }, cb: (ctx: BotContext, methods: BotMethods) => Promise<any>) => {
+        this.model = new FactoryModel(aiModel)
+
+    }
+
+    createCallback = (cb: (ctx: BotContext, methods: BotMethods) => Promise<void>): CallbackFunction<any, any> => {
         
         return  async (ctx: BotContext, methods: BotMethods) => {
             try {
-                const format =  await schemasFn(ctx.body, schema, new FactoryModel(model), methods.state) as z.infer<typeof schema>
+                const format =  await schemasFn(ctx.body, this.schema, this.model, methods.state) as z.infer<typeof this.schema>
                 ctx.context = format          
             } catch (error) {
                 ctx.context = null
