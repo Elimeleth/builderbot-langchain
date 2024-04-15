@@ -20,11 +20,10 @@ const client = new OramaClient({
 
 const aiflow = createAIFlow
     .setKeyword(EVENTS.WELCOME)
-    .setAIModel({ modelName: 'openai' })
     .pipe(({ addAnswer }) => {
         return addAnswer('Hola!, dejame buscar entre el stock...')
     })
-    .setCatchLayer(z.object({ 
+    .setStructuredLayer(z.object({ 
         intention: z.enum(['SALES']).describe(`La intención del cliente:
             SALES: Si el cliente pregunta, quiere informacion o esta interesado en uno o mas productos
         
@@ -39,7 +38,7 @@ const aiflow = createAIFlow
             }
         }
     })
-    .setTransformLayer(
+    .setContextLayer(
         z.object({
             product_name: z.string().describe('El producto que busca el cliente'),
          }),
@@ -49,11 +48,7 @@ const aiflow = createAIFlow
     )
     .setStore({
         searchFn: async (term) => {
-            if (typeof term === 'object') {
-                term = Object.values(term).join(' ')
-            }else if (Array.isArray(term)) {
-                term = term.join(' ')
-            }
+            console.log({ term })
 
             const { hits } = await client.search({ term, limit: 7 }) as any
             const products = hits.map(hit => hit.document) as Product[]
@@ -139,7 +134,7 @@ const aiflow = createAIFlow
         })
         .addAnswer('¿Deseas comprar el producto (SI / NO)?')
     })
-    .setCatchLayer(z.object({
+    .setStructuredLayer(z.object({
         intention: z.enum(['SI', 'NO']).describe('Repuesta del ususario')
     }), async (ctx, { endFlow, state, flowDynamic }) => {
         const product = state.get('product') as any
@@ -178,7 +173,7 @@ const aiflow = createAIFlow
         await flowDynamic(template)
 
         return endFlow()
-    },true)
+    }, { capture: true })
     .createFlow()
 
 const main = async () => {
