@@ -1,11 +1,10 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { AiModel, InvokeParams, ModelArgs, ModelName } from "../../types";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { SYSTEM_STRUCT , PROMT } from "../prompts";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
 import z, {ZodType, ZodTypeDef } from "zod"
+import { MODELS } from "./models";
 
 export default class FactoryModel {
     model: BaseChatModel
@@ -71,29 +70,9 @@ export default class FactoryModel {
             return
         }
 
+        aiModel ||= { modelName: 'openai', args: undefined }
         const { modelName, args } = aiModel
 
-        if (!modelName) {
-            this.model = new ChatGoogleGenerativeAI({
-                modelName: args?.modelName || 'gemini-pro',
-                maxOutputTokens: args?.maxOutputTokens || 2048,
-                apiKey: args?.apikey || process.env.GOOGLE_API_KEY
-            })
-            return
-        }
-
-        if (modelName === 'gemini') {
-            this.model = new ChatGoogleGenerativeAI({
-                modelName: args?.modelName || 'gemini-pro',
-                maxOutputTokens: args?.maxOutputTokens || 2048,
-                apiKey: args?.apikey || process.env.GOOGLE_API_KEY
-            })
-        }else {
-            this.model = new ChatOpenAI({
-                modelName: args?.modelName || 'gpt-3.5-turbo-16k',
-                maxTokens: args?.maxOutputTokens || 2048,
-                openAIApiKey: args?.apikey || process.env.OPENAI_API_KEY
-            })
-        }
+        this.model = MODELS[modelName](args)
     }
 }

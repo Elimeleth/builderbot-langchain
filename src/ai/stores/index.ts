@@ -2,8 +2,8 @@ import httpRequest from "../../utils/http.request";
 import { Document } from "@langchain/core/documents";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import {
-  JSONLoader,
-  JSONLinesLoader,
+    JSONLoader,
+    JSONLinesLoader,
 } from "langchain/document_loaders/fs/json";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
@@ -15,6 +15,7 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { FastEmbedding } from "@builderbot-plugins/fast-embedding"
 import { Embeddings } from "@langchain/core/embeddings";
 import { AxiosRequestConfig } from "axios";
+import { VectorStoreRetriever } from "@langchain/core/vectorstores";
 
 export default class StoreRetriever extends BaseRetriever {
     lc_namespace = ["langchain", "retrievers"];
@@ -32,27 +33,27 @@ export default class StoreRetriever extends BaseRetriever {
             httpConf?: AxiosRequestConfig,
         },
         fields?: BaseRetrieverInput
-        ) {
-            super(fields)
-            this.ingest().then(() => console.log('Ingested')).catch(err => {
-                throw err
-            })
-            this.urlOrPath = this.conf?.urlOrPath
-            this.schema = this.conf?.schema
-            this.store = this.conf?.store
-            this.embbedgins = this.conf?.embbedgins
-            this.httpConf = this.conf?.httpConf
-        }
+    ) {
+        super(fields)
+        this.ingest().then(() => console.log('Ingested')).catch(err => {
+            throw err
+        })
+        this.urlOrPath = this.conf?.urlOrPath
+        this.schema = this.conf?.schema
+        this.store = this.conf?.store
+        this.embbedgins = this.conf?.embbedgins
+        this.httpConf = this.conf?.httpConf
+    }
 
     private async ingest() {
         const embeddings = this?.embbedgins || new FastEmbedding('AllMiniLML6V2')
 
         if (!this.store) {
             this.store = HNSWLib
-        } 
+        }
 
-        if (!this.store?.fromDocuments) {
-            throw new Error('Store must have a fromDocuments method')
+        if (!this.store?.fromDocuments || !this.store?.addDocuments) {
+            throw new Error('Store must have a fromDocuments or addDocuments method')
         }
 
         const url_re = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
@@ -67,10 +68,10 @@ export default class StoreRetriever extends BaseRetriever {
             }
 
             const obj = data.map((d: any) => Object.keys(d).map(key => {
-                    if (this.schema.includes(key)) {
-                        return data[key]
-                    }
-                })
+                if (this.schema.includes(key)) {
+                    return data[key]
+                }
+            })
             )
 
             const documents = obj.map((d: any) => new Document({
@@ -78,29 +79,62 @@ export default class StoreRetriever extends BaseRetriever {
                 metadata: d
             }))
 
-            this.store = await this.store?.fromDocuments(documents, embeddings)
+            this.store = this.setStore(documents, embeddings)
 
         }
         const loader = new DirectoryLoader(
             this.urlOrPath,
             {
-              ".json": (path) => new JSONLoader(path, "/text"),
-              ".jsonl": (path) => new JSONLinesLoader(path, "/html"),
-              ".txt": (path) => new TextLoader(path),
-              ".pdf": (path) => new PDFLoader(path),
-              ".csv": (path) => new CSVLoader(path, "text"),
+                ".json": (path) => new JSONLoader(path, "/text"),
+                ".jsonl": (path) => new JSONLinesLoader(path, "/html"),
+                ".txt": (path) => new TextLoader(path),
+                ".pdf": (path) => new PDFLoader(path),
+                ".csv": (path) => new CSVLoader(path, "text"),
             }
         );
 
         const documents = await loader.load();
-        this.store = await this.store?.fromDocuments(documents, embeddings)
+        this.store = this.setStore(documents, embeddings)
 
+    }
+
+    private async setStore(documents: any[], embbedgins?:any) {
+
+        if (documents.length > 1000) {
+            try {
+                const firts = documents.slice(0, 1000)
+                const rest = documents.slice(1000)
+
+                let vectorStore: VectorStoreRetriever<any>
+
+                if (this.store?.fromDocuments) {
+                    vectorStore = await this.store.fromDocuments(firts, embbedgins)
+                }else {
+                    vectorStore = await this.store.addDocuments(documents)
+                }
+
+                let data = []
+
+                while (data.length < rest.length) {
+                    const d = documents.slice(data.length, data.length + 1000)
+                    await vectorStore.addDocuments(d)
+                    data = data.concat(d)
+                    console.log('done data:', data.length)
+                }
+
+                return vectorStore
+            } catch (error) {
+                throw error
+            }
+        }
+
+        return await this.store.fromDocuments(documents, embbedgins)
     }
 
     async _getRelevantDocuments(
         query: string,
         runManager?: CallbackManagerForRetrieverRun
-      ): Promise<Document[]> {
+    ): Promise<Document[]> {
         return await this.store.asRetriever()._getRelevantDocuments(query)
     }
 }

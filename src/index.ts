@@ -1,11 +1,10 @@
 import { EVENTS, addKeyword } from "@builderbot/bot";
-import { Callbacks, Retriever, ModelArgs, ModelName, Store, RunnableConf, AiModel } from "./types";
+import { Callbacks, Retriever, Store, RunnableConf, AiModel } from "./types";
 import { FactoryModel, Memory, Runnable } from "./ai";
-import { ZodSchema, ZodType, ZodTypeDef } from "zod";
+import { ZodType, ZodTypeDef } from "zod";
 import { TFlow, BotContext, BotMethods } from "@builderbot/bot/dist/types";
 import StoreRetriever from "./ai/stores";
 import ContextualCompression from "./ai/contextuals";
-import { Embeddings } from "@langchain/core/embeddings";
 import { StructLayer, TransformLayer } from "./layers";
 import { CustomRetriever } from "./ai/retrievers";
 import { BaseRetriever } from "@langchain/core/retrievers";
@@ -23,11 +22,11 @@ class createAIFlow {
     }
 
     static setStore = (args: Partial<Store & Retriever>) => {
-        if (!args?.conf?.urlOrPath && !args?.searchFn) {
+        if (!args?.conf && !args?.searchFn) {
             throw new Error('Either urlOrPath or searchFn must be provided')
         }
 
-        if (Object.keys(args.conf).includes('urlOrPath')) {
+        if (args?.conf && Object.keys(args?.conf).includes('urlOrPath')) {
             const store = args.conf
             this.store = new StoreRetriever({
                 urlOrPath: store?.urlOrPath,
@@ -43,16 +42,21 @@ class createAIFlow {
     }
 
     static setStructuredLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, opts?: { capture: boolean, aiModel?: AiModel }) => {
-        const { capture, aiModel } = opts
-        this.kwrd = this.kwrd.addAction({ capture }, 
-            new StructLayer(schema, aiModel).createCallback(cb))
+        
+        this.kwrd = this.kwrd.addAction({ capture: opts?.capture || false }, 
+            new StructLayer(schema, opts?.aiModel).createCallback(cb))
         return this
     }
 
     static setContextLayer = <T>(schema: ZodType<T, ZodTypeDef, T>, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>, opts?: { capture: boolean, aiModel?: AiModel }) => {
-        const { capture, aiModel } = opts
-        this.kwrd = this.kwrd.addAction({ capture }, 
-            new TransformLayer(schema, aiModel).createCallback(cb))
+        this.kwrd = this.kwrd.addAction({ capture: opts?.capture || false }, 
+            new TransformLayer(schema, opts?.aiModel).createCallback(cb))
+        return this
+    }
+
+    static setConditionalLayer = (opts: { capture: boolean }, cb: (ctx: BotContext, methods: BotMethods) => Promise<void>) => {
+        //pass
+        console.warn('[INFO] setConditionalLayer is not supported yet :)')
         return this
     }
 

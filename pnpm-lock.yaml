@@ -11,6 +11,9 @@ dependencies:
   '@builderbot/bot':
     specifier: 1.1.0
     version: 1.1.0
+  '@langchain/cloudflare':
+    specifier: ^0.0.4
+    version: 0.0.4
   '@langchain/community':
     specifier: ^0.0.47
     version: 0.0.47(hnswlib-node@3.0.0)
@@ -517,6 +520,10 @@ packages:
       - debug
       - supports-color
 
+  /@cloudflare/ai@1.1.0:
+    resolution: {integrity: sha512-6j2aeelMfPj2YVj/zQBAj9PAbEZSrO/t+Wywy3Gvk93JsTlsZvEH+V9JYIZHynhSt0juuOrSWP9ju3vN6lUDMQ==}
+    dev: false
+
   /@emnapi/runtime@1.1.1:
     resolution: {integrity: sha512-3bfqkzuR1KLx57nZfjr2NLnFOobvyS0aTszaEGCGqmYMVDRaGvgIZbjGSV/MHSSmLgQ/b9JFHQ5xm5WRZYd+XQ==}
     requiresBuild: true
@@ -990,6 +997,15 @@ packages:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
+
+  /@langchain/cloudflare@0.0.4:
+    resolution: {integrity: sha512-7ylEr8cqECdZLK0TEsy8PsewNXKHec1rripegYlQs+XU5pviEXZKZG4y1n52d3u1ApSJ4S+lyqjBGsMRTj7blQ==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@cloudflare/ai': 1.1.0
+      '@langchain/core': 0.1.57
+      uuid: 9.0.1
+    dev: false
 
   /@langchain/community@0.0.47(hnswlib-node@3.0.0):
     resolution: {integrity: sha512-j20KhnWs16K/qxaY3QccOFMfcEmiTXN00NB1IPeO1pexRsvHL7GfqZ8rR5cOSSBfft2iuoGxaj1EZIyxh5ftgA==}

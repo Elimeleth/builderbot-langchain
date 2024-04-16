@@ -23,7 +23,8 @@ export type ModelArgs = {
     apikey?: string,
     temperature?: number,
     topK?: number 
-    topP?: number
+    topP?: number,
+    [key: string]: any
 }
 
 export type Store = {
@@ -41,7 +42,7 @@ export type Retriever = {
     fields?: BaseRetrieverInput
 }
 
-export type ModelName ='gemini' | 'openai'
+export type ModelName ='gemini' | 'openai' | 'cloudflare'
 
 export type InvokeParams = {
     question: string,
