@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { InvokeParams, ModelArgs, ModelName } from "../../types";
+import { AiModel, InvokeParams, ModelArgs, ModelName } from "../../types";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { SYSTEM_STRUCT , PROMT } from "../prompts";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
@@ -9,11 +9,16 @@ import z, {ZodType, ZodTypeDef } from "zod"
 
 export default class FactoryModel {
     model: BaseChatModel
-    constructor(private ai?: {modelName: ModelName, args?: ModelArgs}) {
-        this.initModel(ai?.modelName, ai?.args)
+    constructor(private ai?: AiModel) {
+
+        this.initModel(ai)
     }
 
     get instance() {
+        if (this.ai instanceof BaseChatModel) {
+            return this.ai.getName()
+        }
+        
         return this.ai?.modelName || 'openai'
     }
 
@@ -60,8 +65,15 @@ export default class FactoryModel {
     }
 
 
-    private initModel(model?: ModelName, args? : ModelArgs) {
-        if (!model) {
+    private initModel(aiModel: AiModel) {
+        if (aiModel instanceof BaseChatModel) {
+            this.model = aiModel
+            return
+        }
+
+        const { modelName, args } = aiModel
+
+        if (!modelName) {
             this.model = new ChatGoogleGenerativeAI({
                 modelName: args?.modelName || 'gemini-pro',
                 maxOutputTokens: args?.maxOutputTokens || 2048,
@@ -70,7 +82,7 @@ export default class FactoryModel {
             return
         }
 
-        if (model === 'gemini') {
+        if (modelName === 'gemini') {
             this.model = new ChatGoogleGenerativeAI({
                 modelName: args?.modelName || 'gemini-pro',
                 maxOutputTokens: args?.maxOutputTokens || 2048,

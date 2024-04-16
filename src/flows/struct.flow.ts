@@ -1,9 +1,10 @@
 import { EVENTS, addKeyword } from "@builderbot/bot";
-import { Callbacks, ModelArgs, ModelName } from "../types";
+import { AiModel, Callbacks, ModelArgs, ModelName } from "../types";
 import { FactoryModel } from "../ai";
 import { ZodSchema, ZodType, ZodTypeDef } from "zod";
 import { TFlow } from "@builderbot/bot/dist/types";
 import { schemasFn } from "../ai/functions";
+
 
 export default class StructuredOutput {
     private static kwrd: TFlow<any, any> = addKeyword(EVENTS.ACTION)
@@ -20,7 +21,7 @@ export default class StructuredOutput {
         return this
     }
 
-    static setAIModel = (ai: { modelName: ModelName, args?: ModelArgs }) => {
+    static setAIModel = (ai: AiModel) => {
         this.model = new FactoryModel(ai)
         return this
     }

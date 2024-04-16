@@ -15,25 +15,11 @@ import z from "zod"
 
 class createAIFlow {
     private static kwrd: TFlow<any, any> = addKeyword(EVENTS.ACTION)
-    private static schema: ZodSchema
     private static store: BaseRetriever
 
     static setKeyword = (ev: any) => {
         this.kwrd = addKeyword(ev, { sensitive: false })
         return this
-    }
-
-    private static setAIModel = (ai?: { modelName: ModelName, args?: ModelArgs }) => {
-        return new FactoryModel(ai)
-    }
-
-    private static setContextual (k: number, similarityThreshold: number, model?: Embeddings) {
-        if (!this.store) {
-            throw new Error('You must set the store first')
-        }
-        return new ContextualCompression(this.store, {
-            k, model, similarityThreshold
-        })
     }
 
     static setStore = (args: Partial<Store & Retriever>) => {
@@ -79,10 +65,8 @@ class createAIFlow {
         let contextual = new ContextualCompression(opts?.contextual?.retriever || this.store, opts?.contextual?.contextOpts);
         let model: FactoryModel = new FactoryModel(opts?.aiModel);
 
-        this.schema = opts?.answerSchema 
-            || this.schema || z.object({ answer: z.string().describe('Answer as best possible') })
-
-        const format_instructions = new StructuredOutputParser(this.schema).getFormatInstructions()
+        const schema = opts?.answerSchema || z.object({ answer: z.string().describe('Answer as best possible') })
+        const format_instructions = new StructuredOutputParser(schema).getFormatInstructions()
 
         this.kwrd = this.kwrd.addAction(async (ctx, { state }) => {
             try {
@@ -103,7 +87,7 @@ class createAIFlow {
                         history: await Memory.getMemory(state) || [],
                         format_instructions
                     },
-                    this.schema
+                    schema
                 )
 
                 Memory.memory({ user: ctx.body, assistant: JSON.stringify(answer) }, state)

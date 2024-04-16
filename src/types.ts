@@ -1,6 +1,7 @@
 import { EVENTS } from "@builderbot/bot"
 import { TFlow } from "@builderbot/bot/dist/types"
 import { Embeddings } from "@langchain/core/embeddings"
+import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers"
 import { VectorStore } from "@langchain/core/vectorstores"
 import { AxiosRequestConfig } from "axios"
@@ -14,7 +15,7 @@ export type Callbacks = {
     onFailure?: (error: Error) => void
 }
 
-export type AiModel = { modelName: ModelName, args?: ModelArgs }
+export type AiModel = { modelName: ModelName, args?: ModelArgs } | BaseChatModel
 
 export type ModelArgs = {
     modelName: string,
