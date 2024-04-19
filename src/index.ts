@@ -66,7 +66,7 @@ class createAIFlow {
     }
 
     static createRunnable = (opts?: RunnableConf, callbacks?: Callbacks) => {
-        let contextual = new ContextualCompression(opts?.contextual?.retriever || this.store, opts?.contextual?.contextOpts);
+        let contextual = opts?.customContextual || new ContextualCompression(opts?.contextual?.retriever || this.store, opts?.contextual?.contextOpts);
         let model: FactoryModel = new FactoryModel(opts?.aiModel);
 
         const schema = opts?.answerSchema || z.object({ answer: z.string().describe('Answer as best possible') })

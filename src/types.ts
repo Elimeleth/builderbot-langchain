@@ -66,6 +66,7 @@ export type RunnableConf = {
       contextOpts?: { k: number, similarityThreshold: number, embeddings?: Embeddings },
       retriever: BaseRetriever
     },
+    customContextual?: any;
     aiModel?: AiModel
 }
 

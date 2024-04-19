@@ -65,14 +65,15 @@ export default class FactoryModel {
 
 
     private initModel(aiModel: AiModel) {
+        
         if (aiModel instanceof BaseChatModel) {
-            this.model = aiModel
+            this.model = aiModel as BaseChatModel
             return
+        }else {
+            aiModel ||= { modelName: 'openai', args: undefined }
+            const { modelName, args } = aiModel
+    
+            this.model = MODELS[modelName](args)
         }
-
-        aiModel ||= { modelName: 'openai', args: undefined }
-        const { modelName, args } = aiModel
-
-        this.model = MODELS[modelName](args)
     }
 }
